@@ -53,12 +53,7 @@ const ShipmentCard = ({ shipment, onSelect, isSelected, index = 0 }) => {
     e.stopPropagation()
     setAssessing(true)
     try {
-      await predictionAPI.assessShipmentRisk({
-        tracking_id: shipment.tracking_id,
-        origin: shipment.origin,
-        destination: shipment.destination,
-        cargo_type: shipment.cargo_type,
-      })
+      await predictionAPI.assess(shipment.tracking_id)
       // Risk assessment completed
     } catch (err) {
       console.error('Failed to assess risk:', err)

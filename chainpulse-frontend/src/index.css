@@ -6,12 +6,31 @@ html {
   @apply scroll-smooth;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   @apply bg-dark-bg text-dark-text;
 }
 
 * {
   @apply transition-colors duration-200;
+}
+
+/* Hide scrollbars globally while preserving scroll behavior. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .leaflet-container {
