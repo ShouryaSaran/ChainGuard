@@ -1,0 +1,134 @@
+/* Pulsing animation for critical markers */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pulse-small {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    opacity: 1;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Shipment marker styles */
+.leaflet-marker-custom {
+  background: none !important;
+  border: none !important;
+}
+
+.shipment-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.shipment-marker.pulse {
+  animation: pulse 2s infinite;
+}
+
+.shipment-marker-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Routes */
+.route-primary {
+  filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5));
+}
+
+.route-alternate {
+  filter: drop-shadow(0 0 1px rgba(156, 163, 175, 0.5));
+}
+
+/* Legend */
+.legend {
+  backdrop-filter: blur(10px);
+  background-color: rgba(17, 24, 39, 0.9) !important;
+  border-color: rgba(107, 114, 128, 0.3) !important;
+  max-width: 200px;
+}
+
+.legend h4 {
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Popup customization */
+.shipment-popup .leaflet-popup-content-wrapper {
+  background-color: #111827 !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(107, 114, 128, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  padding: 0 !important;
+}
+
+.shipment-popup .leaflet-popup-content {
+  margin: 0 !important;
+  color: #f9fafb;
+  font-size: 14px;
+}
+
+.shipment-popup .leaflet-popup-tip {
+  background-color: #111827 !important;
+  border-top-color: #111827 !important;
+}
+
+/* Leaflet map dark theme adjustments */
+.leaflet-container {
+  background-color: #0a0f1e !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-scale-line {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  border: 1px solid rgba(107, 114, 128, 0.3) !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background-color: #1f2937 !important;
+}
+
+/* Attribution control dark theme */
+.leaflet-control-attribution {
+  background-color: rgba(17, 24, 39, 0.8) !important;
+  color: #9ca3af !important;
+  font-size: 12px;
+}
+
+/* Circle/disruption zones */
+.leaflet-circle {
+  fill-rule: evenodd;
+}
+
+.pulse-small {
+  display: inline-block;
+  animation: pulse-small 1.5s infinite;
+}
