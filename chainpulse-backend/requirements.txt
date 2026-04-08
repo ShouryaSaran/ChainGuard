@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-socketio
+redis
+psycopg2-binary
+sqlalchemy
+asyncpg
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+textblob
+httpx
+python-dotenv
+pydantic
