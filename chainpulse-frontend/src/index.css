@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom landing page classes */
+.glass-panel { backdrop-filter: blur(12px); background: rgba(45, 52, 73, 0.6); }
+.luminous-button { background: linear-gradient(135deg, #4cd6ff 0%, #007994 100%); }
+.pulse-glow { box-shadow: 0 0 15px rgba(76, 214, 255, 0.2); }
 html {
   @apply scroll-smooth;
 }
@@ -9,8 +13,9 @@ html {
 html,
 body,
 #root {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -21,16 +26,22 @@ body {
   @apply transition-colors duration-200;
 }
 
-/* Hide scrollbars globally while preserving scroll behavior. */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* Custom scrollbar for a premium look */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-*::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+::-webkit-scrollbar-track {
+  background: #0b1326;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d3449;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4cd6ff;
 }
 
 .leaflet-container {
