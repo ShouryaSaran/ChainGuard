@@ -386,9 +386,7 @@ function App() {
   // Listen for alerts
   useEffect(() => {
     const unsubscribe = onAlert((data) => {
-      console.log('Alert received:', data)
       addAlert(data)
-      console.log(`Alert for ${data.tracking_id}: ${data.message}`)
     })
 
     return unsubscribe

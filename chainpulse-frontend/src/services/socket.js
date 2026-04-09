@@ -22,17 +22,14 @@ export const initSocket = () => {
     })
 
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id)
       emitStatus('connected')
     })
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected')
       emitStatus('disconnected')
     })
 
     socket.on('connect_error', (error) => {
-      console.log('Socket connection error:', error)
       emitStatus('disconnected')
     })
 
