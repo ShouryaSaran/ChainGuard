@@ -302,6 +302,7 @@ function App({ onLogout }) {
     if (!trackingId) return
 
     const shipment = shipments.find((item) => item.tracking_id === trackingId)
+    const affectedShipment = activeAffectedShipments.find((item) => item.tracking_id === trackingId)
     if (shipment) {
       setSelectedShipment(shipment)
     }
@@ -309,11 +310,33 @@ function App({ onLogout }) {
     try {
       const response = await predictionAPI.assess(trackingId, ownerEmail)
       setAssessmentModalData({
-        shipment: shipment || { tracking_id: trackingId },
-        assessment: response.data,
+        shipment: shipment || { tracking_id: trackingId, eta: affectedShipment?.eta_after || affectedShipment?.eta_before },
+        assessment: {
+          ...response.data,
+          eta_before: affectedShipment?.eta_before,
+          eta_after: affectedShipment?.eta_after,
+          estimated_delay_hours: affectedShipment?.estimated_delay_hours,
+        },
       })
     } catch (error) {
       console.error('Failed to assess risk from disruption panel:', error)
+      // Keep UX resilient: open modal with available disruption context even if assess fails.
+      const fallbackRisk = Number(affectedShipment?.risk_score || shipment?.risk_score || 0)
+      const fallbackLevel = fallbackRisk < 0.25 ? 'low' : fallbackRisk < 0.5 ? 'medium' : fallbackRisk < 0.75 ? 'high' : 'critical'
+      setAssessmentModalData({
+        shipment: shipment || { tracking_id: trackingId, eta: affectedShipment?.eta_after || affectedShipment?.eta_before },
+        assessment: {
+          tracking_id: trackingId,
+          risk_score: fallbackRisk,
+          risk_level: fallbackLevel,
+          should_reroute: fallbackRisk >= 0.7,
+          recommendation: 'Risk details are based on disruption simulation context.',
+          factors: [],
+          eta_before: affectedShipment?.eta_before,
+          eta_after: affectedShipment?.eta_after,
+          estimated_delay_hours: affectedShipment?.estimated_delay_hours,
+        },
+      })
     }
   }
 
@@ -690,6 +713,7 @@ function App({ onLogout }) {
           setIsSimulatorOpen(false)
           setMapPickMode(false)
         }}
+        shipments={shipments}
         mapPickMode={mapPickMode}
         onMapPickModeChange={setMapPickMode}
         selectedLocation={simulatorLocation}

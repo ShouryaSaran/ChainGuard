@@ -32,6 +32,7 @@ class ShipmentBase(BaseModel):
 class ShipmentCreate(ShipmentBase):
     tracking_id: str | None = None
     owner_email: str | None = None
+    status: ShipmentStatus = "in_transit"
 
 
 class ShipmentUpdate(BaseModel):

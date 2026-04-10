@@ -219,7 +219,9 @@ async def list_shipments(owner_email: str | None = Query(default=None), db=Depen
     
     result = await db.execute(select(Shipment).where(Shipment.owner_email == effective_owner_email))
     shipments = result.scalars().all()
-    if not shipments:
+    # Only seed synthetic data for the demo owner.
+    # Real users should not get records auto-recreated after they delete them.
+    if not shipments and effective_owner_email == DEFAULT_OWNER_EMAIL:
         await seed_database(effective_owner_email)
         result = await db.execute(select(Shipment).where(Shipment.owner_email == effective_owner_email))
         shipments = result.scalars().all()
@@ -246,7 +248,7 @@ async def create_shipment(payload: ShipmentCreate, owner_email: str | None = Que
             dest_lat=payload.dest_lat,
             dest_lon=payload.dest_lon,
             cargo_type=payload.cargo_type,
-            status=payload.status,
+            status=payload.status or "in_transit",
             current_lat=payload.current_lat,
             current_lon=payload.current_lon,
             risk_score=payload.risk_score,

@@ -31,16 +31,47 @@ const AddShipmentModal = ({ isOpen, onClose, onSuccess, ownerEmail }) => {
   const [formData, setFormData] = useState({
     origin: '',
     destination: '',
-    departure_date: new Date().toISOString().split('T')[0],
+    departure_date: '',
     cargo_type: 'electronics',
-    status: 'in_transit',
   })
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState('')
 
+  const formatDepartureDateInput = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8)
+    if (digits.length <= 2) return digits
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
+    if (name === 'departure_date') {
+      setFormData(prev => ({ ...prev, departure_date: formatDepartureDateInput(value) }))
+      return
+    }
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const parseDepartureDate = (value) => {
+    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim())
+    if (!match) return null
+
+    const day = Number(match[1])
+    const month = Number(match[2])
+    const year = Number(match[3])
+    const date = new Date(Date.UTC(year, month - 1, day))
+
+    // Reject invalid calendar dates like 31/02/2026.
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      return null
+    }
+
+    return date.toISOString()
   }
 
   const handleSubmit = async (e) => {
@@ -60,6 +91,12 @@ const AddShipmentModal = ({ isOpen, onClose, onSuccess, ownerEmail }) => {
         setFormError('Origin and destination must be different cities.')
         return
       }
+
+      const parsedDepartureDate = parseDepartureDate(formData.departure_date)
+      if (!parsedDepartureDate) {
+        setFormError('Departure date must be in dd/mm/yyyy format.')
+        return
+      }
       
       const payload = {
         origin: formData.origin,
@@ -69,21 +106,19 @@ const AddShipmentModal = ({ isOpen, onClose, onSuccess, ownerEmail }) => {
         dest_lat: destCoords.lat,
         dest_lon: destCoords.lon,
         cargo_type: formData.cargo_type,
-        status: formData.status,
         current_lat: originCoords.lat,
         current_lon: originCoords.lon,
         risk_score: 0.1,
         route_distance_km: 5000,
-        departure_date: new Date(formData.departure_date).toISOString(),
+        departure_date: parsedDepartureDate,
       }
       
       await shipmentAPI.createShipment(payload, ownerEmail)
       setFormData({
         origin: '',
         destination: '',
-        departure_date: new Date().toISOString().split('T')[0],
+        departure_date: '',
         cargo_type: 'electronics',
-        status: 'in_transit',
       })
       onClose()
       onSuccess?.()
@@ -146,10 +181,14 @@ const AddShipmentModal = ({ isOpen, onClose, onSuccess, ownerEmail }) => {
             <div className="relative">
               <Calendar size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" />
               <input
-                type="date"
+                type="text"
                 name="departure_date"
                 value={formData.departure_date}
                 onChange={handleChange}
+                placeholder="dd/mm/yyyy"
+                inputMode="numeric"
+                pattern="\d{2}/\d{2}/\d{4}"
+                maxLength={10}
                 required
                 className="w-full rounded border border-gray-700/50 bg-dark-bg py-2 pl-9 pr-3 text-sm text-dark-text focus:border-accent-blue focus:outline-none"
               />
@@ -168,21 +207,6 @@ const AddShipmentModal = ({ isOpen, onClose, onSuccess, ownerEmail }) => {
               <option value="perishable">Perishable</option>
               <option value="hazmat">Hazmat</option>
               <option value="general">General</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-dark-muted mb-1.5">Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full bg-dark-bg border border-gray-700/50 rounded px-3 py-2 text-dark-text text-sm focus:outline-none focus:border-accent-blue"
-            >
-              <option value="in_transit">In Transit</option>
-              <option value="delayed">Delayed</option>
-              <option value="at_risk">At Risk</option>
-              <option value="delivered">Delivered</option>
             </select>
           </div>
 

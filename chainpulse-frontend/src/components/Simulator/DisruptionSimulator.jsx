@@ -34,6 +34,7 @@ const severityLabels = {
 const DisruptionSimulator = ({
   isOpen,
   onClose,
+  shipments = [],
   mapPickMode,
   onMapPickModeChange,
   selectedLocation,
@@ -101,6 +102,25 @@ const DisruptionSimulator = ({
     onLocationPick?.({ label: city.label, lat: city.lat, lon: city.lon })
   }
 
+  const getDemoTargetShipment = () => {
+    const inTransitShipments = shipments.filter((shipment) => shipment?.status === 'in_transit')
+    const targetShipment = inTransitShipments[0] || shipments[0]
+
+    if (!targetShipment) return null
+
+    const lat = Number(targetShipment.current_lat ?? targetShipment.origin_lat)
+    const lon = Number(targetShipment.current_lon ?? targetShipment.origin_lon)
+
+    if (Number.isNaN(lat) || Number.isNaN(lon)) return null
+
+    return {
+      shipment: targetShipment,
+      lat,
+      lon,
+      label: `${targetShipment.tracking_id} route`,
+    }
+  }
+
   const handleMapMode = (enabled) => {
     onMapPickModeChange?.(enabled)
     setStatusMessage(enabled ? 'Click the map to set the disruption location.' : '')
@@ -143,25 +163,40 @@ const DisruptionSimulator = ({
     if (demoRunning) return
     setDemoRunning(true)
 
-    const stormPayload = {
-      disruption_type: 'weather_storm',
-      severity: 'critical',
-      location: 'North Pacific',
-      lat: 35.0,
-      lon: -160.0,
-      affected_radius_km: 900,
-      duration_hours: 18,
-    }
+    const demoTarget = getDemoTargetShipment()
+    const targetPayload = demoTarget
+      ? {
+          disruption_type: 'weather_storm',
+          severity: 'critical',
+          location: demoTarget.label,
+          lat: demoTarget.lat,
+          lon: demoTarget.lon,
+          affected_radius_km: 140,
+          duration_hours: 18,
+        }
+      : {
+          disruption_type: 'weather_storm',
+          severity: 'critical',
+          location: 'North Pacific',
+          lat: 35.0,
+          lon: -160.0,
+          affected_radius_km: 900,
+          duration_hours: 18,
+        }
 
-    setForm(stormPayload)
+    setForm(targetPayload)
     onMapPickModeChange?.(false)
-    onLocationPick?.({ label: stormPayload.location, lat: stormPayload.lat, lon: stormPayload.lon })
-    setStatusMessage('Demo mode started: storm building in the Pacific...')
+    onLocationPick?.({ label: targetPayload.location, lat: targetPayload.lat, lon: targetPayload.lon })
+    setStatusMessage(
+      demoTarget
+        ? `Demo mode started: targeting ${demoTarget.shipment.tracking_id} so the disruption hits a live shipment.`
+        : 'Demo mode started: storm building in the Pacific...',
+    )
 
     demoTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
     demoTimersRef.current = []
 
-    await triggerDisruption(stormPayload)
+    await triggerDisruption(targetPayload)
 
     demoTimersRef.current.push(window.setTimeout(() => {
       setStatusMessage('3 shipments have moved to at_risk...')

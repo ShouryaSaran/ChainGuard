@@ -104,6 +104,32 @@ const RiskAssessmentModal = ({ data, onClose }) => {
           </div>
         </div>
 
+        {(data.assessment?.eta_before || data.assessment?.eta_after) && (
+          <div className="mb-4 rounded-xl border border-amber-700/30 bg-amber-950/10 p-4">
+            <p className="text-xs uppercase tracking-wide text-amber-300">Disruption ETA Impact</p>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-gray-700/50 bg-dark-bg/70 px-3 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-dark-muted">ETA Before</p>
+                <p className="mt-1 text-sm font-semibold">
+                  {data.assessment?.eta_before ? new Date(data.assessment.eta_before).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'N/A'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-700/50 bg-dark-bg/70 px-3 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-dark-muted">ETA After</p>
+                <p className="mt-1 text-sm font-semibold">
+                  {data.assessment?.eta_after ? new Date(data.assessment.eta_after).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'N/A'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-700/50 bg-dark-bg/70 px-3 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-dark-muted">Estimated Delay</p>
+                <p className="mt-1 text-sm font-semibold">
+                  {data.assessment?.estimated_delay_hours != null ? `${Number(data.assessment.estimated_delay_hours).toFixed(1)} hours` : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 rounded-xl border border-gray-700/50 bg-dark-bg/70 p-4">
           <p className="text-xs uppercase tracking-wide text-dark-muted">Assessment Summary</p>
           <p className="mt-1 text-sm text-dark-text">

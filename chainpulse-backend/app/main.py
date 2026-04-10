@@ -297,6 +297,16 @@ def _severity_to_risk_boost(severity: str) -> float:
     return mapping.get(severity, 0.18)
 
 
+def _severity_to_delay_multiplier(severity: str) -> float:
+    mapping = {
+        "low": 0.15,
+        "medium": 0.35,
+        "high": 0.6,
+        "critical": 0.9,
+    }
+    return mapping.get(severity, 0.35)
+
+
 @api_app.post("/api/disruptions/simulate")
 async def simulate_disruption(payload: SimulateDisruptionRequest):
     """Simulate a disruption and update affected shipments immediately."""
@@ -329,19 +339,24 @@ async def simulate_disruption(payload: SimulateDisruptionRequest):
             previous_score = shipment.risk_score
             distance = calculate_distance(payload.lat, payload.lon, shipment.current_lat, shipment.current_lon)
             if distance <= payload.affected_radius_km:
+                eta_before = shipment.eta
                 snapshots.append(
                     {
                         "id": shipment.id,
                         "risk_score": previous_score,
                         "status": shipment.status,
+                        "eta": eta_before,
                     }
                 )
                 proximity_factor = max(0.25, 1 - (distance / max(payload.affected_radius_km, 1)))
                 new_risk = min(1.0, previous_score + boost * proximity_factor)
                 new_status = "at_risk" if new_risk >= 0.7 else shipment.status
+                delay_hours = max(1.0, payload.duration_hours * _severity_to_delay_multiplier(payload.severity) * proximity_factor)
+                eta_after = eta_before + timedelta(hours=delay_hours)
 
                 shipment.risk_score = new_risk
                 shipment.status = new_status
+                shipment.eta = eta_after
                 affected_shipments.append({
                     "id": shipment.id,
                     "tracking_id": shipment.tracking_id,
@@ -349,6 +364,9 @@ async def simulate_disruption(payload: SimulateDisruptionRequest):
                     "current_lon": shipment.current_lon,
                     "risk_score": new_risk,
                     "status": new_status,
+                    "eta_before": eta_before.isoformat() if eta_before else None,
+                    "eta_after": eta_after.isoformat() if eta_after else None,
+                    "estimated_delay_hours": round(delay_hours, 1),
                 })
 
                 await sio.emit(
@@ -360,6 +378,7 @@ async def simulate_disruption(payload: SimulateDisruptionRequest):
                         "current_lon": shipment.current_lon,
                         "risk_score": new_risk,
                         "status": new_status,
+                        "eta": eta_after.isoformat() if eta_after else None,
                     },
                 )
 
@@ -430,6 +449,7 @@ async def cancel_simulated_disruption(disruption_id: str):
 
             shipment.risk_score = snapshot["risk_score"]
             shipment.status = snapshot["status"]
+            shipment.eta = snapshot.get("eta")
 
             restored_payload = {
                 "id": shipment.id,
@@ -438,6 +458,7 @@ async def cancel_simulated_disruption(disruption_id: str):
                 "current_lon": shipment.current_lon,
                 "risk_score": shipment.risk_score,
                 "status": shipment.status,
+                "eta": shipment.eta.isoformat() if shipment.eta else None,
             }
             restored_shipments.append(restored_payload)
 
